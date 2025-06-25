@@ -1079,7 +1079,7 @@ def create_ui():
                     label="🔥 Wildfire Management Query",
                     elem_id="question_input",
                     show_copy_button=True,
-                    value="Analyze the current wildfire situation: How large is the area currently burning, what is the rate of spread, and which communities need immediate evacuation?",
+                    value="🖼️ Analyze the Maui wildfire satellite image at /Users/kang/GitHub/wildfire-agent/Maui Wildfires Image.jpg. Identify fire hotspots, assess burn areas, and evaluate risks to Lahaina community.",
                 )
 
                 # Enhanced module selection dropdown
@@ -1114,12 +1114,13 @@ def create_ui():
 
                 # Example questions
                 examples = [
+                    "🖼️ Analyze the Maui wildfire satellite image at /Users/kang/GitHub/wildfire-agent/Maui Wildfires Image.jpg. Identify fire hotspots, assess burn areas, and evaluate risks to Lahaina community.",
+                    "🎯 Use YOLO object detection to identify and analyze all objects in the Maui wildfire image, then combine with VLM analysis for comprehensive assessment.",
+                    "🔥 Apply YOLO wildfire detection to identify fire indicators and generate emergency recommendations for the Maui image.",
                     "Analyze the current wildfire situation: How large is the area currently burning, what is the rate of spread, and which communities need immediate evacuation?",
                     "What are the safest evacuation routes for communities threatened by the active fire?",
                     "Assess the wildfire risk to critical infrastructure including hospitals, schools, and power stations.",
-                    "Analyze burn severity and vegetation loss in the affected area using satellite imagery.",
-                    "Which wildlife habitats and protected areas have been impacted by the fire?",
-                    "Are water resources in the region contaminated or at risk from the fire?",
+                    "Generate a comprehensive evacuation plan for affected communities with timeline and resource requirements.",
                 ]
 
                 gr.Examples(examples=examples, inputs=question_input)
