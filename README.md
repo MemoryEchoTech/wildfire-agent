@@ -33,6 +33,7 @@
 - [🎯 Example Use Cases](#-example-use-cases)
 - [🌐 Web Interface](#-web-interface)
 - [🧪 Testing Framework](#-testing-framework)
+- [📋 Logging and Monitoring](#-logging-and-monitoring)
 - [📄 License](#-license)
 - [🖊️ Citation](#️-citation)
 - [🤝 Contributing](#-contributing)
@@ -471,6 +472,120 @@ Success rate: 100.0%
 The testing framework ensures tool reliability and provides fast feedback for development without the complexity of full agent initialization.
 
 For detailed testing documentation, see [tests/README.md](tests/README.md).
+
+# 📋 Logging and Monitoring
+
+Wildfire Agent provides comprehensive logging and monitoring capabilities for tracking system operations, debugging issues, and maintaining audit trails.
+
+## Log Storage
+
+All console output and system operations are automatically saved to daily log files:
+
+```
+/path/to/wildfire-agent/owl/logs/gradio_log_YYYY-MM-DD.txt
+```
+
+### Log Features
+
+- **Daily Rotation**: New log file created each day (e.g., `gradio_log_2025-06-25.txt`)
+- **Persistent Storage**: Logs survive application restarts and system reboots
+- **Full Console Output**: Everything displayed in console is saved to files
+- **UTF-8 Encoding**: Supports international characters and special symbols
+- **Structured Format**: Timestamp + Logger + Level + Message
+
+### Log Content
+
+The log files contain comprehensive information including:
+
+- **Agent Conversations**: Complete dialogue between Emergency Manager and Wildfire AI Agent
+- **Tool Operations**: YOLO detection, image analysis, file operations
+- **System Events**: Model loading, workspace creation, API calls
+- **Error Details**: Full stack traces and debugging information
+- **Performance Metrics**: Processing times and resource usage
+
+## Web UI vs Console Logs
+
+The system provides two different views of activity:
+
+### Conversation Record Tab (Web UI)
+- **Filtered View**: Shows only agent-to-agent dialogue
+- **User-Friendly**: Formatted with emojis and clean presentation
+- **Real-Time**: Updates automatically during processing
+- **Deduplicated**: Removes duplicate messages for clarity
+
+### Console Logs (Terminal/Files)
+- **Complete View**: All system operations and technical details
+- **Developer-Focused**: Includes debug info, warnings, and system messages
+- **Raw Format**: Unfiltered technical logging information
+- **Comprehensive**: Framework messages, dependencies, error traces
+
+## Accessing Logs
+
+### View Recent Activity
+```bash
+# Monitor real-time logs
+tail -f owl/logs/gradio_log_$(date +%Y-%m-%d).txt
+
+# View specific date
+cat owl/logs/gradio_log_2025-06-25.txt
+
+# Show last 50 lines
+tail -50 owl/logs/gradio_log_2025-06-25.txt
+```
+
+### Search and Analysis
+```bash
+# Find YOLO operations
+grep "YOLO" owl/logs/gradio_log_2025-06-25.txt
+
+# Check for errors
+grep "ERROR" owl/logs/gradio_log_2025-06-25.txt
+
+# View agent conversations
+grep "camel.agents.chat_agent" owl/logs/gradio_log_2025-06-25.txt
+
+# Count log levels
+grep -c "INFO\|ERROR\|WARNING" owl/logs/gradio_log_2025-06-25.txt
+```
+
+### Log Management
+```bash
+# Clean old logs (optional)
+find owl/logs -name "gradio_log_*.txt" -mtime +30 -delete
+
+# Archive logs
+tar -czf logs_backup_$(date +%Y%m%d).tar.gz owl/logs/
+
+# Check log file sizes
+ls -lh owl/logs/
+```
+
+## Monitoring Best Practices
+
+1. **Regular Review**: Check logs for errors and performance issues
+2. **Disk Space**: Monitor log directory size, especially in production
+3. **Backup Important Sessions**: Archive logs from critical analysis sessions
+4. **Error Tracking**: Set up alerts for ERROR-level log entries
+5. **Performance Analysis**: Use logs to identify slow operations
+
+## Debugging with Logs
+
+When troubleshooting issues:
+
+1. **Check Recent Logs**: Start with the current day's log file
+2. **Search for Errors**: Look for ERROR or EXCEPTION entries
+3. **Follow Timestamps**: Trace the sequence of events leading to issues
+4. **Check Tool Operations**: Verify YOLO, image analysis, and file operations
+5. **Review Agent Dialogue**: Examine conversation flow in filtered logs
+
+## Log Rotation and Cleanup
+
+- **Automatic**: New file created daily, no automatic cleanup
+- **Manual Cleanup**: Remove old files when disk space is limited
+- **Retention Policy**: Consider keeping 30-90 days of logs for audit purposes
+- **Archive Strategy**: Compress and backup important analysis sessions
+
+The logging system ensures complete visibility into Wildfire Agent operations while providing both technical detail for developers and user-friendly conversation views for emergency managers.
 
 # 📄 License
 
