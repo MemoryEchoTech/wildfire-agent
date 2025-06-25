@@ -301,7 +301,124 @@ def validate_input(question: str) -> bool:
     return True
 
 
-def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
+def extract_agent_summary(chat_history: list, society=None) -> str:
+    """Extract a summary of what the agent accomplished from chat history
+    
+    Args:
+        chat_history: List of chat messages from the agent session
+        society: Society object with workspace information
+        
+    Returns:
+        str: Formatted summary of agent actions
+    """
+    if not chat_history:
+        return "No actions recorded in this session."
+    
+    summary_parts = []
+    summary_parts.append("# 🔥 Agent Session Summary\n")
+    
+    # Add workspace information if available
+    if society and hasattr(society, 'wildfire_workspace'):
+        workspace_path = society.wildfire_workspace
+        summary_parts.append(f"**📁 Workspace:** `{workspace_path}`\n")
+        summary_parts.append(f"**🔗 Quick Access:** `{workspace_path.parent / 'latest'}`\n\n")
+    
+    # Track different types of actions
+    actions = {
+        'files_created': [],
+        'images_analyzed': [],
+        'tools_used': [],
+        'analyses_performed': [],
+        'errors_encountered': []
+    }
+    
+    # Parse chat history for actions
+    for message in chat_history:
+        content = str(message).lower()
+        
+        # Track file operations
+        if 'saved' in content or 'created' in content or 'generated' in content:
+            if '.jpg' in content or '.png' in content:
+                actions['files_created'].append('🖼️ Image file')
+            elif '.json' in content:
+                actions['files_created'].append('📄 JSON results')
+            elif '.docx' in content or '.pdf' in content:
+                actions['files_created'].append('📋 Report document')
+            elif 'file' in content:
+                actions['files_created'].append('📁 Analysis file')
+        
+        # Track image analysis
+        if 'analyze' in content and ('image' in content or 'satellite' in content):
+            actions['images_analyzed'].append('🛰️ Satellite imagery')
+        if 'maui' in content and 'wildfire' in content:
+            actions['images_analyzed'].append('🔥 Maui wildfire satellite image')
+        
+        # Track tool usage
+        if 'yolo' in content:
+            actions['tools_used'].append('🎯 YOLO object detection')
+        if 'code execution' in content or 'python' in content:
+            actions['tools_used'].append('💻 Code execution')
+        if 'search' in content:
+            actions['tools_used'].append('🔍 Web search')
+        if 'browser' in content:
+            actions['tools_used'].append('🌐 Web browsing')
+        
+        # Track analyses
+        if 'risk assessment' in content:
+            actions['analyses_performed'].append('⚠️ Risk assessment')
+        if 'evacuation' in content:
+            actions['analyses_performed'].append('🚨 Evacuation planning')
+        if 'fire detection' in content or 'hotspot' in content:
+            actions['analyses_performed'].append('🔥 Fire detection')
+        if 'infrastructure' in content:
+            actions['analyses_performed'].append('🏗️ Infrastructure analysis')
+        
+        # Track errors
+        if 'error' in content or 'failed' in content:
+            actions['errors_encountered'].append('❌ Processing error')
+    
+    # Build summary sections
+    if actions['images_analyzed']:
+        summary_parts.append("## 🖼️ Images Analyzed\n")
+        for item in set(actions['images_analyzed']):
+            summary_parts.append(f"- {item}\n")
+        summary_parts.append("\n")
+    
+    if actions['tools_used']:
+        summary_parts.append("## 🛠️ Tools Used\n")
+        for item in set(actions['tools_used']):
+            summary_parts.append(f"- {item}\n")
+        summary_parts.append("\n")
+    
+    if actions['analyses_performed']:
+        summary_parts.append("## 📊 Analyses Performed\n")
+        for item in set(actions['analyses_performed']):
+            summary_parts.append(f"- {item}\n")
+        summary_parts.append("\n")
+    
+    if actions['files_created']:
+        summary_parts.append("## 📁 Files Created\n")
+        for item in set(actions['files_created']):
+            summary_parts.append(f"- {item}\n")
+        summary_parts.append("\n")
+    
+    if actions['errors_encountered']:
+        summary_parts.append("## ⚠️ Issues Encountered\n")
+        for item in set(actions['errors_encountered']):
+            summary_parts.append(f"- {item}\n")
+        summary_parts.append("\n")
+    
+    # Add session stats
+    summary_parts.append("## 📈 Session Statistics\n")
+    summary_parts.append(f"- **Total Messages:** {len(chat_history)}\n")
+    summary_parts.append(f"- **Tools Used:** {len(set(actions['tools_used']))}\n")
+    summary_parts.append(f"- **Files Generated:** {len(set(actions['files_created']))}\n")
+    summary_parts.append(f"- **Analyses Completed:** {len(set(actions['analyses_performed']))}\n")
+    
+    return "".join(summary_parts)
+
+
+def run_owl(question: str, example_module: str) -> Tuple[str, str, str, str]:
     """Run the OWL system and return results
 
     Args:
@@ -309,7 +426,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
         example_module: Example module name to import (e.g., "run_terminal_zh" or "run_deep")
 
     Returns:
-        Tuple[...]: Answer, token count, status
+        Tuple[str, str, str, str]: Answer, token count, status, summary
     """
     global CURRENT_PROCESS
 
@@ -320,6 +437,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
             "Please enter a valid question",
             "0",
             "❌ Error: Invalid input question",
+            "No summary available due to invalid input.",
         )
 
     try:
@@ -336,6 +454,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"Selected module '{example_module}' is not supported",
                 "0",
                 "❌ Error: Unsupported module",
+                "No summary available due to unsupported module.",
             )
 
         # Dynamically import target module
@@ -349,6 +468,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"Unable to import module: {module_path}",
                 "0",
                 f"❌ Error: Module {example_module} does not exist or cannot be loaded - {str(ie)}",
+                "No summary available due to import error.",
             )
         except Exception as e:
             logging.error(
@@ -358,6 +478,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"Error occurred while importing module: {module_path}",
                 "0",
                 f"❌ Error: {str(e)}",
+                "No summary available due to module error.",
             )
 
         # Check if it contains the construct_society function
@@ -369,6 +490,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"construct_society function not found in module {module_path}",
                 "0",
                 "❌ Error: Module interface incompatible",
+                "No summary available due to interface error.",
             )
 
         # Build society simulation
@@ -382,6 +504,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"Error occurred while building society simulation: {str(e)}",
                 "0",
                 f"❌ Error: Build failed - {str(e)}",
+                "No summary available due to build error.",
             )
 
         # Run society simulation
@@ -395,6 +518,7 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
                 f"Error occurred while running society simulation: {str(e)}",
                 "0",
                 f"❌ Error: Run failed - {str(e)}",
+                "No summary available due to runtime error.",
             )
 
         # Safely get token count
@@ -409,17 +533,21 @@ def run_owl(question: str, example_module: str) -> Tuple[str, str, str]:
             f"Processing completed, token usage: completion={completion_tokens}, prompt={prompt_tokens}, total={total_tokens}"
         )
 
+        # Generate agent summary
+        agent_summary = extract_agent_summary(chat_history, society)
+        
         return (
             answer,
             f"Completion tokens: {completion_tokens:,} | Prompt tokens: {prompt_tokens:,} | Total: {total_tokens:,}",
             "✅ Successfully completed",
+            agent_summary,
         )
 
     except Exception as e:
         logging.error(
             f"Uncaught error occurred while processing the question: {str(e)}"
         )
-        return (f"Error occurred: {str(e)}", "0", f"❌ Error: {str(e)}")
+        return (f"Error occurred: {str(e)}", "0", f"❌ Error: {str(e)}", "No summary available due to uncaught error.")
 
 
 def update_module_description(module_name: str) -> str:
@@ -804,7 +932,7 @@ def create_ui():
                 result_queue.put(result)
             except Exception as e:
                 result_queue.put(
-                    (f"Error occurred: {str(e)}", "0", f"❌ Error: {str(e)}")
+                    (f"Error occurred: {str(e)}", "0", f"❌ Error: {str(e)}", "No summary available due to error.")
                 )
 
         # Start background processing thread
@@ -822,6 +950,7 @@ def create_ui():
                 "0",
                 "<span class='status-indicator status-running'></span> Processing...",
                 logs2,
+                "Agent is currently processing your request...",
             )
 
             time.sleep(1)
@@ -829,7 +958,7 @@ def create_ui():
         # Processing complete, get results
         if not result_queue.empty():
             result = result_queue.get()
-            answer, token_count, status = result
+            answer, token_count, status, summary = result
 
             # Final update of conversation record
             logs2 = get_latest_logs(100, LOG_QUEUE)
@@ -844,13 +973,14 @@ def create_ui():
                     f"<span class='status-indicator status-success'></span> {status}"
                 )
 
-            yield token_count, status_with_indicator, logs2
+            yield token_count, status_with_indicator, logs2, summary
         else:
             logs2 = get_latest_logs(100, LOG_QUEUE)
             yield (
                 "0",
                 "<span class='status-indicator status-error'></span> Terminated",
                 logs2,
+                "Session was terminated before completion.",
             )
 
     with gr.Blocks(title="🔥 Wildfire Agent", theme=gr.themes.Soft(primary_hue="red")) as app:
@@ -1153,6 +1283,14 @@ def create_ui():
                             "Clear Record", variant="secondary"
                         )
 
+                with gr.TabItem("Agent Summary"):
+                    # Add agent summary display area
+                    with gr.Group():
+                        summary_display = gr.Markdown(
+                            value="No agent actions recorded yet. Run a query to see what the agent accomplishes.",
+                            elem_classes="log-display",
+                        )
+
                 with gr.TabItem("Environment Variable Management", id="env-settings"):
                     with gr.Group(elem_classes="env-manager-container"):
                         gr.Markdown("""
@@ -1240,7 +1378,7 @@ def create_ui():
         run_button.click(
             fn=process_with_live_logs,
             inputs=[question_input, module_dropdown],
-            outputs=[token_count_output, status_output, log_display2],
+            outputs=[token_count_output, status_output, log_display2, summary_display],
         )
 
         # Module selection updates description
