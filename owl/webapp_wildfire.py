@@ -1050,22 +1050,66 @@ def create_ui():
             }
             
             /* Log display area style */
-            .log-display textarea {
-                height: 400px !important;
-                max-height: 400px !important;
+            .log-display {
+                height: 500px !important;
+                max-height: 500px !important;
                 overflow-y: auto !important;
+                border: 1px solid #e0e0e0;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 20px;
+                background-color: #f8f9fa;
                 font-family: monospace;
                 font-size: 0.9em;
                 white-space: pre-wrap;
                 line-height: 1.4;
+                word-wrap: break-word;
             }
             
-            .log-display {
-                border-radius: 10px;
-                padding: 15px;
-                margin-bottom: 20px;
-                min-height: 50vh;
-                max-height: 75vh;
+            .log-display pre {
+                margin: 0;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            
+            .log-display code {
+                background-color: transparent;
+                padding: 0;
+                color: inherit;
+            }
+            
+            /* Fix scrolling for Gradio Markdown component in conversation record */
+            .log-display .prose {
+                height: 450px !important;
+                max-height: 450px !important;
+                overflow-y: auto !important;
+                padding-right: 10px;
+            }
+            
+            /* Custom scrollbar styling */
+            .log-display .prose::-webkit-scrollbar {
+                width: 8px;
+            }
+            
+            .log-display .prose::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 4px;
+            }
+            
+            .log-display .prose::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 4px;
+            }
+            
+            .log-display .prose::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+            
+            /* Ensure conversation text wraps properly */
+            .log-display .prose p, .log-display .prose div {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                margin-bottom: 10px;
             }
             
             /* Environment variable management style */
