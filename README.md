@@ -32,6 +32,7 @@
 - [🧰 Geospatial Toolkits](#-geospatial-toolkits)
 - [🎯 Example Use Cases](#-example-use-cases)
 - [🌐 Web Interface](#-web-interface)
+- [🧪 Testing Framework](#-testing-framework)
 - [📄 License](#-license)
 - [🖊️ Citation](#️-citation)
 - [🤝 Contributing](#-contributing)
@@ -405,6 +406,71 @@ Features:
 - **Real-time Updates**: Live fire monitoring and alerts
 - **Report Generation**: Automated analysis reports
 - **Multi-user Support**: Collaborative emergency planning
+
+# 🧪 Testing Framework
+
+Wildfire Agent includes a comprehensive unittest framework for testing individual tools without requiring LLM or agent initialization.
+
+## Quick Testing
+
+```bash
+# Run all tool tests
+python tests/run_tool_tests.py
+
+# List available test modules
+python tests/run_tool_tests.py --list
+
+# Run specific tool tests
+python tests/run_tool_tests.py --filter test_wildfire_yolo_toolkit
+
+# Include LLM-dependent tests (requires API keys)
+python tests/run_tool_tests.py --include-llm
+```
+
+## Test Categories
+
+### 🔧 Non-LLM Tool Tests
+Direct testing of tools without agent involvement:
+
+- ✅ **YOLO Toolkit** - Object detection and wildfire analysis (100% pass rate)
+- 🔧 **Code Execution Toolkit** - Script execution capabilities
+- 🔧 **Search Toolkit** - Web search functionality  
+- 🔧 **File Write Toolkit** - File operations
+
+### 🤖 LLM-Dependent Tool Tests
+Tools requiring LLM capabilities (skipped by default):
+
+- 🤖 **Image Analysis Toolkit** - LLM-powered image understanding
+- 🤖 **Video Analysis Toolkit** - LLM-powered video understanding
+- 🤖 **Document Processing Toolkit** - LLM-powered document analysis
+
+## Test Features
+
+- **Dependency Management**: Automatic detection and graceful handling of missing dependencies
+- **Real-World Testing**: Uses actual Maui wildfire satellite imagery for validation
+- **Environment Flexibility**: Works with or without conda environments
+- **CI/CD Integration**: Proper exit codes for automated testing pipelines
+- **Comprehensive Coverage**: Unit tests, functional tests, and error handling
+
+## YOLO Toolkit Test Results
+
+```
+============================================================
+TOOL TESTS SUMMARY
+============================================================
+Total modules: 1
+Total tests run: 10
+Failures: 0
+Errors: 0
+Skipped: 0
+
+Success rate: 100.0%
+============================================================
+```
+
+The testing framework ensures tool reliability and provides fast feedback for development without the complexity of full agent initialization.
+
+For detailed testing documentation, see [tests/README.md](tests/README.md).
 
 # 📄 License
 
