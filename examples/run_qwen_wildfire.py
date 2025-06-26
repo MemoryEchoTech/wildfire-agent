@@ -36,13 +36,22 @@ from camel.societies import RolePlaying
 
 from owl.utils import run_society, DocumentProcessingToolkit
 
-# Try to import YOLO toolkit
+# Try to import YOLO toolkits
 try:
     from owl.utils.wildfire_yolo_toolkit import WildfireYOLOToolkit
-    YOLO_AVAILABLE = True
+    YOLO_PYTORCH_AVAILABLE = True
 except ImportError:
-    YOLO_AVAILABLE = False
-    print("⚠️  YOLO toolkit not available. Install with: conda install ultralytics opencv pytorch torchvision -y")
+    YOLO_PYTORCH_AVAILABLE = False
+    print("⚠️  PyTorch YOLO toolkit not available. Install with: conda install ultralytics opencv pytorch torchvision -y")
+
+try:
+    from owl.utils.wildfire_yolo_mindspore_toolkit import WildfireYOLOMindSporeToolkit
+    YOLO_MINDSPORE_AVAILABLE = True
+except ImportError:
+    YOLO_MINDSPORE_AVAILABLE = False
+    print("⚠️  MindSpore YOLO toolkit not available. Install with: pip install mindspore")
+
+YOLO_AVAILABLE = YOLO_PYTORCH_AVAILABLE or YOLO_MINDSPORE_AVAILABLE
 
 from camel.logger import set_log_level
 
@@ -275,20 +284,44 @@ You are working in a dedicated wildfire analysis workspace. All file operations 
         *FileWriteToolkit(output_dir=str(workspace_paths['risk_assessments'])).get_tools(),  # For risk assessments
     ]
     
-    # Add YOLO toolkit if available
-    if YOLO_AVAILABLE:
+    # Add YOLO toolkits if available
+    yolo_toolkits_added = 0
+    
+    # Try PyTorch YOLO first (primary)
+    if YOLO_PYTORCH_AVAILABLE:
         try:
-            yolo_toolkit = WildfireYOLOToolkit(
+            yolo_pytorch_toolkit = WildfireYOLOToolkit(
                 model_path="yolo11n.pt",  # Nano model for faster inference
                 confidence_threshold=0.3,  # Lower threshold for wildfire detection
                 output_dir=str(workspace_paths['satellite_imagery'])  # Save YOLO results to satellite imagery folder
             )
-            tools.extend(yolo_toolkit.get_tools())
-            print("🔥 YOLO wildfire detection toolkit integrated successfully!")
+            tools.extend(yolo_pytorch_toolkit.get_tools())
+            print("🔥 PyTorch YOLO wildfire detection toolkit integrated successfully!")
+            yolo_toolkits_added += 1
         except Exception as e:
-            print(f"⚠️  Failed to initialize YOLO toolkit: {e}")
+            print(f"⚠️  Failed to initialize PyTorch YOLO toolkit: {e}")
+    
+    # Try MindSpore YOLO (alternative)
+    if YOLO_MINDSPORE_AVAILABLE:
+        try:
+            yolo_mindspore_toolkit = WildfireYOLOMindSporeToolkit(
+                model_path="yolo11n_mindspore.ckpt",  # MindSpore checkpoint
+                confidence_threshold=0.3,  # Lower threshold for wildfire detection
+                output_dir=str(workspace_paths['satellite_imagery']),  # Save YOLO results to satellite imagery folder
+                device="auto"  # Auto-detect best device
+            )
+            tools.extend(yolo_mindspore_toolkit.get_tools())
+            print("🧠 MindSpore YOLO wildfire detection toolkit integrated successfully!")
+            yolo_toolkits_added += 1
+        except Exception as e:
+            print(f"⚠️  Failed to initialize MindSpore YOLO toolkit: {e}")
+    
+    if yolo_toolkits_added == 0:
+        print("⚠️  No YOLO toolkits available - wildfire object detection disabled")
+        print("   Install PyTorch YOLO: conda install ultralytics opencv pytorch torchvision -y")
+        print("   Install MindSpore YOLO: pip install mindspore")
     else:
-        print("⚠️  YOLO toolkit not available - wildfire object detection disabled")
+        print(f"✅ {yolo_toolkits_added} YOLO toolkit(s) successfully integrated!")
 
     # Configure agent roles and parameters for wildfire management
     user_agent_kwargs = {"model": models["user"]}

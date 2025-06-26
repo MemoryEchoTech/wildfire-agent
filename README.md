@@ -154,6 +154,12 @@ Wildfire Agent integrates advanced YOLO (You Only Look Once) computer vision mod
 - Terrain analysis support
 - Water resource detection
 
+**🧠 Multi-Framework Support:**
+- **PyTorch YOLO**: Industry-standard implementation with Ultralytics
+- **MindSpore YOLO**: Huawei's AI framework for efficient inference
+- **Automatic Framework Detection**: Uses available frameworks transparently
+- **Unified API**: Same interface regardless of backend framework
+
 ## YOLO Integration Features
 
 - **Automated Analysis**: Run `analyze_wildfire_image()` for instant object detection
@@ -165,7 +171,7 @@ Wildfire Agent integrates advanced YOLO (You Only Look Once) computer vision mod
 ## Usage Examples
 
 ```python
-# Automated wildfire object detection
+# Automated wildfire object detection (uses available framework)
 "Use YOLO to detect and analyze objects in the Maui wildfire satellite image"
 
 # Infrastructure risk assessment
@@ -173,6 +179,10 @@ Wildfire Agent integrates advanced YOLO (You Only Look Once) computer vision mod
 
 # Combined analysis
 "Combine YOLO detection with VLM analysis for comprehensive wildfire assessment"
+
+# Framework-specific requests
+"Use PyTorch YOLO to analyze the wildfire image"
+"Use MindSpore YOLO for efficient inference on the satellite image"
 ```
 
 # 🛠️ Installation
@@ -195,19 +205,38 @@ brew install gdal qgis grass
 
 ## YOLO Dependencies
 
-For object detection capabilities, install YOLO dependencies in your conda environment:
+Wildfire Agent supports both **PyTorch** and **MindSpore** YOLO implementations for object detection:
+
+### Option 1: PyTorch YOLO (Recommended)
 
 ```bash
 # Create and activate conda environment
 conda create -n owl python=3.10
 conda activate owl
 
-# Install YOLO and computer vision dependencies
+# Install PyTorch YOLO and computer vision dependencies
 conda install ultralytics opencv pytorch torchvision torchaudio -c pytorch -y
 
 # Verify installation
-python -c "from ultralytics import YOLO; print('✅ YOLO ready!')"
+python -c "from ultralytics import YOLO; print('✅ PyTorch YOLO ready!')"
 ```
+
+### Option 2: MindSpore YOLO (Alternative)
+
+```bash
+# Install MindSpore and dependencies
+pip install mindspore opencv-python
+
+# Verify installation
+python -c "import mindspore; print('✅ MindSpore YOLO ready!')"
+```
+
+### Dual Framework Support
+
+Both frameworks can be installed simultaneously:
+- **PyTorch YOLO**: Primary framework with full feature support
+- **MindSpore YOLO**: Alternative framework for Huawei ecosystem
+- **Auto-Detection**: System automatically detects and uses available frameworks
 
 ## Installation Options
 
