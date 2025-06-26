@@ -99,6 +99,147 @@ def log_reader_thread(log_file):
         logging.error(f"Log reader thread error: {str(e)}")
 
 
+def get_workspace_images():
+    """Get all images from the current workspace for Gradio Gallery
+    
+    Returns:
+        list: List of image file paths for Gradio Gallery component
+    """
+    import os
+    import glob
+    from datetime import datetime
+    
+    image_paths = []
+    
+    # Define workspace paths to search
+    workspace_paths = [
+        "workspace",
+        "wildfire_workspace/latest",
+        "wildfire_workspace/latest/satellite_imagery",
+        "wildfire_workspace/latest/maps_and_visualizations",
+        "wildfire_workspace/latest/analysis_results",
+    ]
+    
+    # Also search all recent workspace sessions
+    workspace_root = "wildfire_workspace"
+    if os.path.exists(workspace_root):
+        # Get all session directories
+        session_dirs = glob.glob(os.path.join(workspace_root, "session_*"))
+        for session_dir in sorted(session_dirs, reverse=True)[:5]:  # Last 5 sessions
+            workspace_paths.extend([
+                os.path.join(session_dir, "satellite_imagery"),
+                os.path.join(session_dir, "maps_and_visualizations"),
+                os.path.join(session_dir, "analysis_results"),
+            ])
+    
+    # Image extensions to search for
+    image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.bmp', '*.tiff', '*.webp']
+    
+    images_with_time = []
+    
+    for workspace_path in workspace_paths:
+        if not os.path.exists(workspace_path):
+            continue
+            
+        for ext in image_extensions:
+            pattern = os.path.join(workspace_path, ext)
+            found_images = glob.glob(pattern)
+            
+            for img_path in found_images:
+                try:
+                    # Get file stats for sorting
+                    stat = os.stat(img_path)
+                    modified_time = datetime.fromtimestamp(stat.st_mtime)
+                    
+                    # Use absolute path for Gradio Gallery
+                    abs_path = os.path.abspath(img_path)
+                    images_with_time.append((abs_path, modified_time))
+                except Exception as e:
+                    continue
+    
+    # Sort by modification time (newest first) and return just the paths
+    images_with_time.sort(key=lambda x: x[1], reverse=True)
+    image_paths = [img[0] for img in images_with_time]
+    
+    return image_paths
+
+
+def format_image_gallery() -> str:
+    """Create formatted gallery display of workspace images
+    
+    Returns:
+        str: HTML/Markdown formatted gallery
+    """
+    images = get_workspace_images()
+    
+    if not images:
+        return """
+# 📸 Image Gallery
+
+No images found in workspace yet. Run an analysis to generate images!
+
+**Tip:** The gallery will show:
+- 🛰️ Input satellite imagery
+- 🎯 YOLO detection results  
+- 📊 Analysis visualizations
+- 🗺️ Generated maps and charts
+"""
+    
+    # Group images by type
+    image_groups = {
+        'satellite_input': [],
+        'yolo_output': [],
+        'analysis_output': [],
+        'map_visualization': [],
+        'general': []
+    }
+    
+    for img in images:
+        image_groups[img['type']].append(img)
+    
+    # Generate gallery HTML
+    gallery_html = "# 📸 Workspace Image Gallery\n\n"
+    gallery_html += f"**Found {len(images)} images** • Last updated: {images[0]['modified'].strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    
+    # Type icons and names
+    type_info = {
+        'satellite_input': ('🛰️', 'Satellite Imagery'),
+        'yolo_output': ('🎯', 'YOLO Detection Results'),
+        'analysis_output': ('📊', 'Analysis Results'),
+        'map_visualization': ('🗺️', 'Maps & Visualizations'),
+        'general': ('📁', 'General Images')
+    }
+    
+    for img_type, (icon, title) in type_info.items():
+        type_images = image_groups[img_type]
+        if not type_images:
+            continue
+            
+        gallery_html += f"## {icon} {title} ({len(type_images)})\n\n"
+        
+        for img in type_images:
+            # Format file size
+            size_mb = img['size'] / (1024 * 1024)
+            size_str = f"{size_mb:.1f} MB" if size_mb >= 1 else f"{img['size'] / 1024:.0f} KB"
+            
+            gallery_html += f"### 📷 {img['filename']}\n\n"
+            
+            # Try to display the image using Gradio's file serving
+            try:
+                gallery_html += f"<img src='/file={img['full_path']}' alt='{img['filename']}' style='max-width: 400px; max-height: 300px; border-radius: 8px; margin: 10px 0;'>\n\n"
+            except Exception:
+                gallery_html += f"*Image could not be displayed*\n\n"
+            
+            gallery_html += f"**Details:**\n"
+            gallery_html += f"- 📁 Path: `{img['path']}`\n"
+            gallery_html += f"- 📏 Size: {size_str}\n"
+            gallery_html += f"- 🕒 Modified: {img['modified'].strftime('%Y-%m-%d %H:%M:%S')}\n"
+            gallery_html += f"- 📂 Workspace: `{img['workspace']}`\n\n"
+            gallery_html += "---\n\n"
+    
+    return gallery_html
+
+
 def get_latest_logs(max_lines=100, queue_source=None):
     """Get the latest log lines from the queue, or read directly from the file if the queue is empty
 
@@ -1335,6 +1476,29 @@ def create_ui():
                             elem_classes="log-display",
                         )
 
+                with gr.TabItem("Image Gallery"):
+                    # Add image gallery display area using proper Gradio Gallery
+                    with gr.Group():
+                        image_gallery_display = gr.Gallery(
+                            value=get_workspace_images(),
+                            label="🔥 Workspace Image Gallery",
+                            show_label=True,
+                            elem_id="workspace_gallery",
+                            columns=3,
+                            rows=2,
+                            object_fit="contain",
+                            height="auto",
+                            allow_preview=True,
+                            show_share_button=False,
+                            show_download_button=True,
+                        )
+
+                    with gr.Row():
+                        refresh_gallery_button = gr.Button("🔄 Refresh Gallery", variant="primary")
+                        auto_refresh_gallery = gr.Checkbox(
+                            label="Auto Refresh", value=False, interactive=True
+                        )
+
                 with gr.TabItem("Environment Variable Management", id="env-settings"):
                     with gr.Group(elem_classes="env-manager-container"):
                         gr.Markdown("""
@@ -1452,6 +1616,25 @@ def create_ui():
             outputs=[log_display2],
         )
 
+        # Image gallery refresh functionality
+        refresh_gallery_button.click(
+            fn=get_workspace_images,
+            outputs=[image_gallery_display]
+        )
+
+        # Auto refresh for image gallery
+        def toggle_gallery_auto_refresh(enabled):
+            if enabled:
+                return gr.update(every=5)  # Refresh every 5 seconds for images
+            else:
+                return gr.update(every=0)
+
+        auto_refresh_gallery.change(
+            fn=toggle_gallery_auto_refresh,
+            inputs=[auto_refresh_gallery],
+            outputs=[image_gallery_display],
+        )
+
         # No longer automatically refresh logs by default
 
     return app
@@ -1482,6 +1665,12 @@ def main():
             favicon_path=os.path.join(
                 os.path.dirname(__file__), "assets", "owl-favicon.ico"
             ),
+            allowed_paths=[
+                ".",  # Current directory
+                "workspace",  # Workspace directory  
+                "wildfire_workspace",  # Wildfire workspace directory
+                "/Users/kang/GitHub/wildfire-agent",  # Project root
+            ],
         )
     except Exception as e:
         logging.error(f"Error occurred while starting the application: {str(e)}")

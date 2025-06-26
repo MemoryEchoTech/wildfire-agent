@@ -396,17 +396,43 @@ Conduct comprehensive wildfire risk analysis:
 Launch the interactive web interface for visual analysis:
 
 ```bash
-# Start the web interface
-python owl/webapp.py
+# Start the wildfire-specific web interface
+python owl/webapp_wildfire.py
 
 # Access at http://localhost:7860
 ```
 
-Features:
-- **Interactive Maps**: Visualize fire data and analysis results
-- **Real-time Updates**: Live fire monitoring and alerts
-- **Report Generation**: Automated analysis reports
-- **Multi-user Support**: Collaborative emergency planning
+## Web Interface Features
+
+### 🔥 Wildfire Management Dashboard
+- **Specialized Interface**: Purpose-built for wildfire emergency management
+- **Multi-tab Interface**: Organized workspace with conversation records, agent summaries, and image gallery
+- **Real-time Processing**: Live updates during agent analysis and processing
+
+### 🖼️ Image Gallery
+- **Visual Workspace**: Automatic display of all workspace images in an organized gallery
+- **Smart Organization**: Images categorized by type (satellite imagery, YOLO outputs, analysis results, maps)
+- **Interactive Preview**: Click to enlarge images, download capability
+- **Auto-refresh**: Optional automatic updates as new images are generated
+- **Comprehensive Coverage**: Scans all workspace directories and recent sessions
+
+### 📊 Agent Summary Tab
+- **Action Tracking**: Comprehensive summary of what the agent accomplished
+- **File Generation**: Track all created files (images, reports, analysis outputs)
+- **Tool Usage**: Monitor which tools and capabilities were utilized
+- **Session Statistics**: Overview of processing metrics and results
+
+### 💬 Conversation Record
+- **Filtered Dialogue**: Clean view of agent-to-agent conversations
+- **Real-time Updates**: Live conversation tracking during processing
+- **Formatted Display**: User-friendly presentation with emojis and structure
+- **Auto-scroll**: Automatic updates with conversation flow
+
+### ⚙️ Environment Management
+- **API Key Configuration**: Secure local storage of API keys in .env file
+- **Interactive Table**: Direct editing of environment variables
+- **Guided Setup**: Links to API key acquisition for various services
+- **Validation**: Real-time status updates for configuration changes
 
 # 🧪 Testing Framework
 
