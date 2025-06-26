@@ -49,7 +49,6 @@ wildfire_workspace/*
 !wildfire_workspace/.gitkeep
 
 # Also ignore regular workspace contents
-workspace/*
 !workspace/.gitkeep
 
 # YOLO model files
