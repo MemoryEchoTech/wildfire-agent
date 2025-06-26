@@ -44,6 +44,14 @@ owl/tmp
 owl/.env
 owl/utils/__pycache__/
 
+# Wildfire workspace - ignore all contents but keep folder structure
+wildfire_workspace/*
+!wildfire_workspace/.gitkeep
+
+# Also ignore regular workspace contents
+workspace/*
+!workspace/.gitkeep
+
 # Logs
 *.log
 logs/
