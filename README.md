@@ -413,8 +413,10 @@ python owl/webapp_wildfire.py
 - **Visual Workspace**: Automatic display of all workspace images in an organized gallery
 - **Smart Organization**: Images categorized by type (satellite imagery, YOLO outputs, analysis results, maps)
 - **Interactive Preview**: Click to enlarge images, download capability
+- **File Path Display**: Detailed information for each image including file paths, sizes, and modification times
 - **Auto-refresh**: Optional automatic updates as new images are generated
 - **Comprehensive Coverage**: Scans all workspace directories and recent sessions
+- **Numbered Reference**: Images numbered for easy identification with corresponding file information
 
 ### 📊 Agent Summary Tab
 - **Action Tracking**: Comprehensive summary of what the agent accomplished

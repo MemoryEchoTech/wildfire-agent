@@ -164,6 +164,46 @@ def get_workspace_images():
     return image_paths
 
 
+def get_image_paths_info():
+    """Get formatted information about image paths in the workspace
+    
+    Returns:
+        str: Formatted markdown with image paths and details
+    """
+    import os
+    import glob
+    from datetime import datetime
+    
+    image_paths = get_workspace_images()
+    
+    if not image_paths:
+        return "No images found in workspace."
+    
+    info_text = f"**Found {len(image_paths)} images:**\n\n"
+    
+    for i, img_path in enumerate(image_paths, 1):
+        try:
+            # Get file info
+            filename = os.path.basename(img_path)
+            rel_path = os.path.relpath(img_path)
+            stat = os.stat(img_path)
+            file_size = stat.st_size
+            modified_time = datetime.fromtimestamp(stat.st_mtime)
+            
+            # Format file size
+            size_mb = file_size / (1024 * 1024)
+            size_str = f"{size_mb:.1f} MB" if size_mb >= 1 else f"{file_size / 1024:.0f} KB"
+            
+            info_text += f"**{i}.** `{filename}`\n"
+            info_text += f"   📁 Path: `{rel_path}`\n"
+            info_text += f"   📏 Size: {size_str} | 🕒 Modified: {modified_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+            
+        except Exception as e:
+            info_text += f"**{i}.** Error reading file: {img_path}\n\n"
+    
+    return info_text
+
+
 def format_image_gallery() -> str:
     """Create formatted gallery display of workspace images
     
@@ -1377,6 +1417,36 @@ def create_ui():
                 overflow: hidden;
             }
             
+            /* Image Gallery Styling */
+            #workspace_gallery {
+                margin-top: 15px !important;
+                padding-top: 10px !important;
+            }
+            
+            #workspace_gallery .gallery-container {
+                position: relative !important;
+                z-index: 1 !important;
+            }
+            
+            /* Image paths info styling */
+            .image-paths-info {
+                margin-top: 20px;
+                padding: 15px;
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                border: 1px solid #e9ecef;
+                font-size: 0.9em;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            
+            .image-paths-info code {
+                background-color: #e9ecef;
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-size: 0.85em;
+            }
+            
 
             @keyframes pulse {
                 0% { opacity: 1; }
@@ -1481,8 +1551,8 @@ def create_ui():
                     with gr.Group():
                         image_gallery_display = gr.Gallery(
                             value=get_workspace_images(),
-                            label="🔥 Workspace Image Gallery",
-                            show_label=True,
+                            label="",
+                            show_label=False,
                             elem_id="workspace_gallery",
                             columns=3,
                             rows=2,
@@ -1491,6 +1561,12 @@ def create_ui():
                             allow_preview=True,
                             show_share_button=False,
                             show_download_button=True,
+                        )
+                        
+                        # Add image paths information
+                        image_paths_info = gr.Markdown(
+                            value=get_image_paths_info(),
+                            elem_classes="image-paths-info",
                         )
 
                     with gr.Row():
@@ -1617,22 +1693,27 @@ def create_ui():
         )
 
         # Image gallery refresh functionality
+        def refresh_gallery_and_info():
+            images = get_workspace_images()
+            info = get_image_paths_info()
+            return images, info
+            
         refresh_gallery_button.click(
-            fn=get_workspace_images,
-            outputs=[image_gallery_display]
+            fn=refresh_gallery_and_info,
+            outputs=[image_gallery_display, image_paths_info]
         )
 
         # Auto refresh for image gallery
         def toggle_gallery_auto_refresh(enabled):
             if enabled:
-                return gr.update(every=5)  # Refresh every 5 seconds for images
+                return gr.update(every=5), gr.update(every=5)  # Refresh every 5 seconds for images
             else:
-                return gr.update(every=0)
+                return gr.update(every=0), gr.update(every=0)
 
         auto_refresh_gallery.change(
             fn=toggle_gallery_auto_refresh,
             inputs=[auto_refresh_gallery],
-            outputs=[image_gallery_display],
+            outputs=[image_gallery_display, image_paths_info],
         )
 
         # No longer automatically refresh logs by default
