@@ -52,6 +52,10 @@ wildfire_workspace/*
 workspace/*
 !workspace/.gitkeep
 
+# YOLO model files
+*.pt
+yolo*.pt
+
 # Logs
 *.log
 logs/
